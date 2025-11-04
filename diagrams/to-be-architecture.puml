@@ -1,0 +1,65 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "User")
+
+System_Boundary(c1, "Cinema Platform") {
+
+    Container(apiGateway, "API Gateway", "", "Routes requests")
+
+    Container(usersService, "Users Service", "", "User auth & profile")
+    ContainerDb(usersDb, "Users DB", "", "User data")
+
+    Container(moviesService, "Movies Service", "", "Movies & metadata")
+    ContainerDb(moviesDb, "Movies DB", "", "Movie data")
+
+    Container(paymentsService, "Payments Service", "", "Payments & billing")
+    ContainerDb(paymentsDb, "Payments DB", "", "Payment data")
+
+    Container(subscriptionsService, "Subscriptions Service", "", "User plans")
+    ContainerDb(subscriptionsDb, "Subscriptions DB", "", "Subscription data")
+
+    Container(recommendationsService, "Recommendations Service", "", "Movie suggestions")
+    ContainerDb(recommendationsDb, "Recommendations DB", "", "Recommendation data")
+
+    Container(messageBroker, "Message Broker", "", "Event bus")
+    Container(recommenderQueue, "Recommender Queue", "", "RabbitMQ link")
+}
+
+System_Ext(externalPayments, "External Payments", "Payment provider")
+System_Ext(externalProviders, "Movie Providers", "Metadata source")
+System_Ext(externalRecommender, "External Recommender", "ML models")
+System_Ext(s3storage, "S3 Storage", "Media files")
+
+' === Relationships ===
+
+Rel(user, apiGateway, "Uses", "HTTP")
+Rel(apiGateway, usersService, "Routes to")
+Rel(apiGateway, moviesService, "Routes to")
+Rel(apiGateway, paymentsService, "Routes to")
+Rel(apiGateway, subscriptionsService, "Routes to")
+Rel(apiGateway, recommendationsService, "Routes to")
+
+Rel(usersService, usersDb, "R/W")
+Rel(moviesService, moviesDb, "R/W")
+Rel(paymentsService, paymentsDb, "R/W")
+Rel(subscriptionsService, subscriptionsDb, "R/W")
+Rel(recommendationsService, recommendationsDb, "R/W")
+
+Rel(moviesService, s3storage, "Media", "HTTPS")
+Rel(moviesService, externalProviders, "Metadata", "HTTPS")
+Rel(paymentsService, externalPayments, "Transactions", "HTTPS")
+
+' === Events ===
+Rel(usersService, messageBroker, "User events", "Async")
+Rel(moviesService, messageBroker, "Movie events", "Async")
+Rel(paymentsService, messageBroker, "Payment events", "Async")
+
+Rel(subscriptionsService, messageBroker, "Consumes", "Async")
+Rel(recommendationsService, messageBroker, "Consumes", "Async")
+
+' === Recommender Integration ===
+Rel(recommendationsService, recommenderQueue, "Requests", "RabbitMQ")
+Rel(externalRecommender, recommenderQueue, "Responses", "RabbitMQ")
+
+@enduml
