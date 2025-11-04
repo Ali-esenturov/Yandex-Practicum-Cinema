@@ -5,7 +5,7 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+[TO_BE_ARCHITECTURE](https://github.com/Ali-esenturov/Yandex-Practicum-Cinema/blob/cinema/diagrams/to-be-architecture.puml)
 
 
 ## Задание 2
@@ -31,11 +31,10 @@
     environment:
       PORT: 8000
       MONOLITH_URL: http://monolith:8080
-      #монолит
-      MOVIES_SERVICE_URL: http://movies-service:8081 #сервис movies
+      MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082 
-      GRADUAL_MIGRATION: "true" # вкл/выкл простого фиче-флага
-      MOVIES_MIGRATION_PERCENT: "50" # процент миграции
+      GRADUAL_MIGRATION: "true"
+      MOVIES_MIGRATION_PERCENT: "50"
     networks:
       - cinemaabyss-network
 ```
@@ -48,7 +47,7 @@
 - Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
 
 ### 2. Kafka
- Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
+Вам как архитектору нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
 
 Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
 
