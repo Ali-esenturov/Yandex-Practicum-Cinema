@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:14
     container_name: cinemaabyss-postgres
@@ -57,12 +56,19 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-monolith
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
       PORT: 8080
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - cinemaabyss-network
 
@@ -73,12 +79,19 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-movies-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
       PORT: 8081
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/movies/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - cinemaabyss-network
 
@@ -118,6 +131,12 @@ services:
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
       MOVIES_MIGRATION_PERCENT: "50"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - cinemaabyss-network
 
@@ -133,6 +152,19 @@ services:
       KAFKA_CLUSTERS_0_NAME: cinemaabyss
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - cinemaabyss-network
+
+  postman-tests:
+    build:
+      context: ./tests/postman
+      dockerfile: Dockerfile
+    container_name: postman-tests
+    depends_on:
+      - monolith
+      - movies-service
+      - proxy-service
+      - events-service
     networks:
       - cinemaabyss-network
 
